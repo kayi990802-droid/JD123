@@ -7,7 +7,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // 【核心安全性檢查 - 統一邏輯】
+        // 【核心安全性檢查】
         (function() {
             const MAX_IDLE_TIME = 30 * 60 * 1000; 
             const lastActive = localStorage.getItem('jinde_last_active');
@@ -40,7 +40,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* 統一側邊欄 */
         .sidebar {
             width: 260px; background: var(--sidebar-bg); color: white;
             display: flex; flex-direction: column; flex-shrink: 0; z-index: 50;
@@ -56,12 +55,10 @@
             background: rgba(255,255,255,0.05); color: white; border-left-color: var(--brand-teal);
         }
 
-        /* 主舞台區 */
         .main-stage { flex-grow: 1; display: flex; flex-direction: column; background: #fdfdfd; overflow: hidden; }
         .top-header { background: white; border-bottom: 1px solid #f1f5f9; padding: 0 32px; height: 70px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
         .content-scroll { padding: 32px; overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
 
-        /* 案場卡片樣式 */
         .project-card { 
             background: white; border-radius: 32px; border: 1px solid #f1f5f9; 
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
@@ -74,7 +71,6 @@
             border-color: var(--brand-teal); 
         }
 
-        /* Modal 遮罩 */
         .modal { 
             display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); 
             backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center; padding: 20px;
@@ -130,7 +126,6 @@
         <section class="content-scroll">
             <div id="projectGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
                 <div class="animate-pulse bg-white rounded-[32px] h-52 border border-slate-100"></div>
-                <div class="animate-pulse bg-white rounded-[32px] h-52 border border-slate-100"></div>
             </div>
             
             <div id="empty-state" class="hidden text-center py-40">
@@ -158,7 +153,7 @@
                     <input type="text" id="p_name" placeholder="例如：大里區王公館防水工程" class="w-full p-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-teal-500/20 font-bold mt-2">
                 </div>
                 <div>
-                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">上傳附件 (圖面/報價單 PDF)</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-widest">上傳附件 (PDF)</label>
                     <input type="file" id="p_file" accept=".pdf" class="block w-full text-xs text-slate-500 mt-2 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:bg-slate-900 file:text-white file:font-black hover:file:bg-teal-600 transition cursor-pointer">
                 </div>
                 <div class="pt-4">
@@ -226,7 +221,6 @@
             const saveBtn = document.getElementById('saveBtn');
 
             if (!name) return alert("請輸入案場名稱");
-            if (fileInput.files.length > 0 && fileInput.files[0].size > 5 * 1024 * 1024) return alert("檔案過大（上限 5MB）");
 
             saveBtn.disabled = true;
             saveBtn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i> 上傳中...';
@@ -235,17 +229,18 @@
             try {
                 if (fileInput.files.length > 0) {
                     const file = fileInput.files[0];
-                    const fileName = `${Date.now()}_${file.name}`;
-                    const { data, error } = await _supabase.storage.from('project-files').upload(fileName, file);
-                    if (error) throw error;
+                    const fileName = `projects/${Date.now()}_${file.name}`;
+                    const { data, error: upErr } = await _supabase.storage.from('project-files').upload(fileName, file);
+                    if (upErr) throw upErr;
                     fileUrl = _supabase.storage.from('project-files').getPublicUrl(fileName).data.publicUrl;
                 }
 
                 const { error: insErr } = await _supabase.from('projects').insert([{
-                    name,
+                    name: name,
                     project_no: "PJ-" + Math.floor(100000 + Math.random() * 900000),
                     file_url: fileUrl
                 }]);
+                
                 if (insErr) throw insErr;
 
                 closeModal();

@@ -18,15 +18,25 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
     <script>
-        // 防止重複登入
-        if (localStorage.getItem('jinde_verified') === 'true') {
-            window.location.replace('index.html');
-        }
+        // --- 自動檢查：如果已經驗證且在 90 天內，直接跳轉 ---
+        (function() {
+            const isVerified = localStorage.getItem('jinde_verified');
+            const loginTime = localStorage.getItem('jinde_login_timestamp');
+            const ninetyDays = 90 * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+
+            if (isVerified === 'true' && loginTime) {
+                if (now - parseInt(loginTime) < ninetyDays) {
+                    window.location.replace('index.html'); // 修正為 index.html
+                } else {
+                    localStorage.clear(); // 過期則清空
+                }
+            }
+        })();
     </script>
 </head>
 <body>
 
-    <!-- 登入面板 -->
     <div id="login-panel" class="glass-card">
         <div class="text-center mb-8">
             <h1 class="text-3xl font-black italic">JINDE<span class="text-teal-500">.</span></h1>
@@ -50,7 +60,6 @@
         </form>
     </div>
 
-    <!-- 註冊面板 -->
     <div id="reg-panel" class="glass-card hidden-view">
         <h2 class="text-xl font-bold text-center mb-6">申請加入成員</h2>
         <form onsubmit="handleRegister(event)" class="space-y-4">
@@ -75,7 +84,6 @@
     </div>
 
     <script>
-        // 【核心連線設定】對應 nbkjntzlwdhqconhskpv 專案
         const S_URL = 'https://nbkjntzlwdhqconhskpv.supabase.co';
         const S_KEY = 'sb_publishable_1jpNK-6m9XwLpoMnSQe-og_N4sULqYH';
         const _supabase = supabase.createClient(S_URL, S_KEY);
@@ -106,11 +114,16 @@
 
                 if (data) {
                     if (data.status === 'active') {
+                        // 寫入本地存儲
                         localStorage.setItem('jinde_verified', 'true');
                         localStorage.setItem('user_name', data.name);
+                        localStorage.setItem('jinde_login_timestamp', Date.now().toString());
+
                         msg.innerText = "✅ 驗證成功，跳轉中...";
                         msg.className = "text-center text-xs text-teal-600 font-bold mt-2";
-                        setTimeout(() => window.location.replace('index.html'), 500);
+                        
+                        // 修正跳轉：確保您的 index 檔案名稱是 index.html
+                        setTimeout(() => window.location.href = 'index.html', 500);
                     } else {
                         msg.innerText = "⚠️ 帳號審核中，請聯繫林老闆開通";
                         msg.className = "text-center text-xs text-orange-500 font-bold mt-2";
@@ -131,7 +144,6 @@
             e.preventDefault();
             const btn = document.getElementById('r_btn');
             const msg = document.getElementById('r_msg');
-            
             btn.disabled = true;
             msg.innerText = "正在提交...";
 

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-                
+        
         :root { --primary: #0d9488; --dark: #1a222d; }
         body { background-color: #f8fafc; font-family: 'Inter', 'Noto Sans TC', sans-serif; display: flex; height: 100vh; overflow: hidden; margin: 0; }
 
@@ -20,13 +20,11 @@
         .nav-link:hover, .nav-link.active { background: #242e3d; color: white; border-left-color: var(--primary); }
         .nav-link.active i { opacity: 1; color: var(--primary); }
 
-        /* 主舞台 */
+        /* 主舞台區域 */
         .main-stage { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .top-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border-bottom: 1px solid #e2e8f0; height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 40; }
-        .content-scroll { flex-grow: 1; overflow-y: auto; }
-
-        /* 日曆核心 */
-        .calendar-grid { background: white; border-bottom: 1px solid #f1f5f9; }
+        .top-nav { background: white; border-bottom: 1px solid #e2e8f0; height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 40; }
+        
+        /* 日曆格點優化 */
         .calendar-cell { 
             aspect-ratio: 1.1 / 1; border: 0.5px solid #f1f5f9; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -38,27 +36,14 @@
             box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3); border-radius: 12px; transform: scale(0.9);
         }
 
-        /* 任務卡片 */
+        /* 任務卡片樣式 */
         .event-card {
             background: white; border: 1px solid #f1f5f9; padding: 20px; border-radius: 24px;
             transition: 0.3s ease; position: relative; overflow: hidden;
         }
         .event-card:hover { transform: translateX(4px); border-color: #cbd5e1; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.05); }
-        .type-tag { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        /* Modal 動畫控制 */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
-            display: flex; align-items: flex-end; justify-content: center;
-            opacity: 0; visibility: hidden; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 200;
-        }
-        .modal-overlay.open { opacity: 1; visibility: visible; }
-        .modal-content { 
-            background: white; width: 100%; border-radius: 32px 32px 0 0; padding: 40px;
-            transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .modal-overlay.open .modal-content { transform: translateY(0); }
-
+        /* 浮動按鈕 */
         .fab { 
             position: fixed; bottom: 32px; right: 32px; width: 60px; height: 60px; 
             background: var(--dark); color: white; border-radius: 18px; 
@@ -66,32 +51,32 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); z-index: 100;
         }
 
-        @media (min-width: 768px) {
-            .modal-overlay { align-items: center; }
-            .modal-content { width: 500px; border-radius: 32px; transform: scale(0.9) translateY(20px); }
-            .modal-overlay.open .modal-content { transform: scale(1) translateY(0); }
+        /* 彈窗控制 */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 200;
         }
+        .modal-overlay.open { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 500px; border-radius: 32px; padding: 40px; }
 
         @media (max-width: 768px) {
             .sidebar { width: 72px; }
             .sidebar .nav-text, .sidebar .logo-text, .sidebar .sub-text { display: none; }
             .nav-link { justify-content: center; padding: 20px 0; }
             .nav-link i { margin: 0; }
-            .top-nav { padding: 0 16px; }
         }
     </style>
 </head>
 <body>
     <aside class="sidebar">
         <div class="p-8">
-            <h1 class="text-2xl font-black tracking-tighter text-white cursor-pointer" onclick="location.href='index.html'">J<span class="logo-text text-teal-500">INDE.</span></h1>
+            <h1 class="text-2xl font-black tracking-tighter text-white">J<span class="logo-text text-teal-500">INDE.</span></h1>
             <p class="text-[9px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-2 sub-text">Engineering Hub</p>
         </div>
         <nav class="flex-grow">
-            <a href="#" class="nav-link"><i class="fas fa-th-large"></i> <span class="nav-text">中控總覽</span></a>
+            <a href="index.html" class="nav-link"><i class="fas fa-th-large"></i> <span class="nav-text">中控總覽</span></a>
             <a href="calendar.html" class="nav-link active"><i class="fas fa-calendar-alt"></i> <span class="nav-text">行程月曆</span></a>
-            <a href="#" class="nav-link"><i class="fas fa-hammer"></i> <span class="nav-text">案場進度</span></a>
-            <a href="#" class="nav-link"><i class="fas fa-users"></i> <span class="nav-text">人員點工</span></a>
+            <a href="billing.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i> <span class="nav-text">請款系統</span></a>
         </nav>
     </aside>
 
@@ -107,7 +92,7 @@
             </div>
         </header>
 
-        <div class="content-scroll">
+        <div class="flex-grow overflow-y-auto">
             <div class="calendar-grid">
                 <div class="grid grid-cols-7 text-center py-4 text-[10px] font-black text-slate-400 border-b border-slate-50">
                     <div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div>
@@ -123,7 +108,8 @@
                     </div>
                 </div>
                 <div id="dayDetailList" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-24">
-                    </div>
+                    <div class="col-span-full text-center text-slate-300 py-12">正在載入行程...</div>
+                </div>
             </div>
         </div>
     </main>
@@ -134,55 +120,46 @@
 
     <div id="addModal" class="modal-overlay" onclick="if(event.target == this) closeAddModal()">
         <div class="modal-content">
-            <div class="max-w-xl mx-auto">
-                <div class="flex justify-between items-center mb-10">
-                    <div>
-                        <h3 class="text-2xl font-black text-slate-900">安排新任務</h3>
-                        <p class="text-slate-400 text-xs mt-1">請填寫詳細的派工內容與指派人員</p>
-                    </div>
-                    <button onclick="closeAddModal()" class="w-12 h-12 bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-600 transition"><i class="fas fa-times"></i></button>
-                </div>
-                
-                <form id="eventForm" onsubmit="saveEvent(event)" class="space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">派工日期</label>
-                            <input type="date" id="form_date" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition" required>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[11px] font-black text-slate-500 uppercase ml-1">任務性質</label>
-                            <select id="form_type" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition appearance-none">
-                                <option value="work">🏗️ 工程施工</option>
-                                <option value="other">📝 勘查備註</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-500 uppercase ml-1">任務標題</label>
-                        <input type="text" id="form_title" placeholder="案場名稱與施工項目" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition" required>
-                    </div>
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-500 uppercase ml-1">負責人員</label>
-                        <input type="text" id="form_staff" placeholder="指派師傅姓名" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition">
-                    </div>
-                    <button type="submit" class="w-full bg-slate-900 py-5 rounded-2xl text-white font-black text-lg shadow-2xl hover:bg-slate-800 active:scale-95 transition-all">確認發布行程</button>
-                </form>
+            <div class="flex justify-between items-center mb-10">
+                <h3 class="text-2xl font-black text-slate-900">安排新任務</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
             </div>
+            <form id="eventForm" onsubmit="saveEvent(event)" class="space-y-6">
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-slate-500 uppercase ml-1">派工日期</label>
+                    <input type="date" id="form_date" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition" required>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-slate-500 uppercase ml-1">案場名稱與項目</label>
+                    <input type="text" id="form_title" placeholder="例如：太平區大樓外牆防水" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition" required>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[11px] font-black text-slate-500 uppercase ml-1">負責人員</label>
+                    <input type="text" id="form_staff" placeholder="指派師傅姓名" class="w-full bg-slate-50 p-4 rounded-2xl outline-none font-bold border-2 border-transparent focus:border-teal-500 transition">
+                </div>
+                <button type="submit" class="w-full bg-slate-900 py-5 rounded-2xl text-white font-black text-lg shadow-2xl hover:bg-teal-600 active:scale-95 transition-all">確認發布行程</button>
+            </form>
         </div>
     </div>
 
     <script>
+        // 確認接好的 Supabase 連線資訊
         const S_URL = 'https://wdpxgichzvfebhlukbrl.supabase.co';
         const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHhnaWNoenZmZWJobHVrYnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjExMzQsImV4cCI6MjA4NDU5NzEzNH0.--85I0A-7WKt0P-ex1Zdnb8UVspuMNshzQtNaLedKq0';
         const _supabase = supabase.createClient(S_URL, S_KEY);
-        
+
         let viewDate = new Date();
         let allEvents = [];
-        let selectedDateStr = new Date().toISOString().split('T')[0];
+        let selectedDateStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
 
         async function init() {
+            // 從 staff_schedules 表抓取數據
             const { data, error } = await _supabase.from('staff_schedules').select('*');
-            if (error) console.error('Fetch Error:', error);
+            if (error) {
+                console.error('Supabase 讀取錯誤:', error.message);
+                alert('連線失敗，請檢查網路或 API 設定');
+                return;
+            }
             allEvents = data || [];
             renderCalendar();
             loadDayDetail(selectedDateStr);
@@ -198,8 +175,8 @@
             const body = document.getElementById('calendarBody');
             body.innerHTML = '';
 
-            for (let i = 0; i < firstDay; i++) { 
-                body.innerHTML += '<div class="calendar-cell bg-slate-50/20 opacity-30"></div>'; 
+            for (let i = 0; i < firstDay; i++) {
+                body.innerHTML += '<div class="calendar-cell bg-slate-50/20 opacity-30"></div>';
             }
 
             for (let d = 1; d <= daysInMonth; d++) {
@@ -207,24 +184,20 @@
                 const dayEvents = allEvents.filter(e => e.work_date === dateStr);
                 const isSelected = selectedDateStr === dateStr;
                 
-                let dots = dayEvents.slice(0, 3).map(e => 
-                    `<span class="w-1 h-1 rounded-full mx-0.5 ${e.type === 'work' ? 'bg-sky-400' : 'bg-slate-300'}"></span>`
-                ).join('');
-
                 body.innerHTML += `
                     <div class="calendar-cell ${isSelected ? 'active' : ''}" onclick="selectDate('${dateStr}')">
                         <span>${d}</span>
-                        <div class="flex mt-1">${dots}</div>
+                        ${dayEvents.length > 0 && !isSelected ? '<div class="w-1.5 h-1.5 bg-teal-500 rounded-full mt-1"></div>' : ''}
                     </div>`;
             }
         }
 
         function loadDayDetail(dateStr) {
             document.getElementById('fullDateLabel').innerText = dateStr;
-            const dayEvents = allEvents.filter(e => e.work_date === dateStr);
             const list = document.getElementById('dayDetailList');
+            const dayEvents = allEvents.filter(e => e.work_date === dateStr);
             
-            if(dayEvents.length === 0) {
+            if (dayEvents.length === 0) {
                 list.innerHTML = `<div class="col-span-full bg-slate-100/50 p-16 rounded-[40px] text-center text-slate-400 font-bold border-2 border-dashed border-slate-200">本日無預定任務</div>`;
                 return;
             }
@@ -232,19 +205,15 @@
             list.innerHTML = dayEvents.map(e => `
                 <div class="event-card group">
                     <div class="flex justify-between items-start mb-4">
-                        <span class="type-tag ${e.type === 'work' ? 'bg-sky-50 text-sky-600' : 'bg-slate-100 text-slate-500'}">
-                            ${e.type === 'work' ? '🏗️ 案場施工' : '📝 現場勘查'}
-                        </span>
-                        <button onclick="deleteEvent('${e.id}')" class="w-8 h-8 flex items-center justify-center text-slate-300 hover:bg-rose-50 hover:text-rose-500 rounded-full transition-all">
-                            <i class="fas fa-trash-alt text-xs"></i>
-                        </button>
+                        <span class="text-[10px] font-black bg-sky-50 text-sky-600 px-3 py-1 rounded-full uppercase tracking-widest">🏗️ 案場施工</span>
+                        <button onclick="deleteEvent('${e.id}')" class="text-slate-300 hover:text-rose-500 transition"><i class="fas fa-trash-alt text-xs"></i></button>
                     </div>
                     <h4 class="text-xl font-black text-slate-800 mb-3">${e.title}</h4>
                     <div class="flex items-center gap-2 text-slate-400 text-xs font-bold">
-                        <i class="far fa-user-circle text-slate-300"></i>
+                        <i class="far fa-user-circle"></i>
                         <span>負責人：${e.staff_names || '未指派'}</span>
                     </div>
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 ${e.type === 'work' ? 'bg-sky-400' : 'bg-slate-300'}"></div>
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-teal-500"></div>
                 </div>`).join('');
         }
 
@@ -259,22 +228,22 @@
             const payload = {
                 work_date: document.getElementById('form_date').value,
                 title: document.getElementById('form_title').value,
-                type: document.getElementById('form_type').value,
                 staff_names: document.getElementById('form_staff').value
             };
+
             const { error } = await _supabase.from('staff_schedules').insert([payload]);
-            if(!error) { 
-                closeAddModal(); 
-                init(); 
+            if (!error) {
+                closeAddModal();
+                init(); // 儲存後自動刷新
             } else {
                 alert('發布失敗：' + error.message);
             }
         }
 
         async function deleteEvent(id) {
-            if(!confirm('確定要移除此行程？')) return;
+            if (!confirm('確定要移除此行程？')) return;
             const { error } = await _supabase.from('staff_schedules').delete().eq('id', id);
-            if(!error) init();
+            if (!error) init();
         }
 
         function changeMonth(offset) {

@@ -12,9 +12,14 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Roboto+Mono:wght@400;700&display=swap');
         
-        body { background-color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; color: #1e293b; }
+        body { background-color: #f8fafc; font-family: 'Noto Sans TC', sans-serif; font-size: 14px; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         .num-font { font-family: 'Roboto Mono', monospace; letter-spacing: -0.5px; }
         
+        /* 捲軸美化 */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+
         /* PDF 報表優化 */
         #pdf-report { 
             width: 210mm; 
@@ -41,7 +46,7 @@
             vertical-align: middle;
         }
         
-        .report-table tr { page-break-inside: avoid !important; }
+        .report-table tr { page-break-inside: avoid !important; break-inside: avoid !important; }
         .stat-card-box { page-break-inside: avoid !important; }
 
         .page-content { display: none; }
@@ -51,10 +56,13 @@
         #entry-modal.active { display: flex; animation: fadeIn 0.2s ease; }
         
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media print { .no-print { display: none !important; } }
+        @media print { 
+            .no-print { display: none !important; }
+            body { -webkit-print-color-adjust: exact; }
+        }
     </style>
 </head>
-<body class="flex flex-col lg:flex-row min-h-screen">
+<body class="flex flex-col lg:flex-row min-h-screen overflow-x-hidden">
 
     <aside class="no-print w-full lg:w-72 bg-slate-900 text-white p-6 sticky top-0 lg:h-screen flex flex-col z-50">
         <div class="mb-8">
@@ -69,7 +77,8 @@
             <h1 class="text-xl font-black text-teal-400 italic">JINDE FINANCE</h1>
             <p class="text-[9px] text-slate-500 font-bold tracking-[2px] mt-1">錦德防水財務雲端</p>
         </div>
-        <nav class="space-y-3 flex-grow font-bold">
+        
+        <nav class="space-y-3 flex-grow font-bold overflow-y-auto custom-scrollbar pr-2">
             <button onclick="switchPage('dashboard')" id="btn-dash" class="w-full text-left px-4 py-3 rounded-xl transition text-sm flex items-center gap-3 bg-slate-800 text-teal-400">
                 <i class="fas fa-chart-pie"></i> 數據統計首頁
             </button>
@@ -81,6 +90,7 @@
                 ＋ 錄入新帳目
             </button>
         </nav>
+
         <div class="pt-6 border-t border-slate-800 mt-auto text-center">
             <button onclick="deleteSelected()" class="w-full py-3 bg-rose-900/50 hover:bg-rose-600 text-rose-200 text-[10px] font-black rounded-xl transition mb-4">
                 <i class="fas fa-trash-sweep mr-1"></i> 刪除選中帳目
@@ -95,12 +105,12 @@
 
     <main class="flex-1 p-4 lg:p-8">
         <div class="no-print bg-white p-5 rounded-[2rem] shadow-sm mb-6 flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 flex-wrap">
                 <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">日期區間</span>
-                <input type="date" id="filter-start" class="bg-slate-100 p-2 rounded-xl text-xs font-bold outline-none">
+                <input type="date" id="filter-start" class="bg-slate-100 p-2 rounded-xl text-xs font-bold outline-none border-0">
                 <span class="text-slate-300 font-black">~</span>
-                <input type="date" id="filter-end" class="bg-slate-100 p-2 rounded-xl text-xs font-bold outline-none">
-                <button onclick="loadData()" class="bg-slate-900 text-white px-5 py-2 rounded-xl text-xs font-black hover:bg-teal-600 transition">執行查詢</button>
+                <input type="date" id="filter-end" class="bg-slate-100 p-2 rounded-xl text-xs font-bold outline-none border-0">
+                <button onclick="loadData()" class="bg-slate-900 text-white px-6 py-2 rounded-xl text-xs font-black hover:bg-teal-600 transition">執行查詢</button>
             </div>
         </div>
 
@@ -119,11 +129,11 @@
                     <h3 class="dash-net-val text-2xl font-black num-font mt-1 text-teal-600">0</h3>
                 </div>
             </div>
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-sm flex flex-col items-center">
+            <div class="bg-white p-6 lg:p-10 rounded-[2.5rem] shadow-sm flex flex-col items-center">
                 <div class="w-full max-w-md h-[300px] flex items-center justify-center relative">
                     <canvas id="mainChart"></canvas>
                 </div>
-                <div id="dash-cat-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full max-w-xl"></div>
+                <div id="dash-cat-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-10 w-full max-w-2xl"></div>
             </div>
         </div>
 
@@ -137,7 +147,7 @@
                 </button>
             </div>
             
-            <div id="pdf-report" class="shadow-2xl">
+            <div id="pdf-report" class="shadow-2xl overflow-x-auto">
                 <div class="flex justify-between items-end border-b-4 border-slate-900 pb-6 mb-8">
                     <div>
                         <h2 class="text-2xl font-black tracking-tight">錦德防水工程行</h2>
@@ -164,11 +174,11 @@
                     </div>
                 </div>
 
-                <div class="flex items-start gap-10 mb-10 stat-card-box bg-slate-50/50 p-8 rounded-3xl border border-dashed border-slate-200">
+                <div class="flex flex-col md:flex-row items-center gap-10 mb-10 stat-card-box bg-slate-50/50 p-8 rounded-3xl border border-dashed border-slate-200">
                     <div class="w-48 h-48 flex-shrink-0">
                         <canvas id="pdfChart"></canvas>
                     </div>
-                    <div id="pdf-cat-list" class="flex-1 grid grid-cols-2 gap-x-8 gap-y-3"></div>
+                    <div id="pdf-cat-list" class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 w-full"></div>
                 </div>
 
                 <table class="report-table">
@@ -198,18 +208,41 @@
     <div id="entry-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[2000] items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <button onclick="closeModal()" class="text-slate-400 text-[10px] font-black uppercase"><i class="fas fa-chevron-left"></i> 返回</button>
+                <button onclick="closeModal()" class="text-slate-400 text-[10px] font-black uppercase hover:text-slate-600"><i class="fas fa-chevron-left"></i> 返回</button>
                 <span class="text-[10px] font-black text-slate-300 uppercase">資料錄入</span>
             </div>
             <div class="space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-[10px] font-black text-slate-400">日期</label><input type="date" id="m-date" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none"></div>
-                    <div><label class="text-[10px] font-black text-slate-400">類型</label><select id="m-type" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none"><option value="expense">支出 (-)</option><option value="income">收入 (+)</option></select></div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400">日期</label>
+                        <input type="date" id="m-date" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none border-0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-400">類型</label>
+                        <select id="m-type" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none border-0 appearance-none">
+                            <option value="expense">支出 (-)</option>
+                            <option value="income">收入 (+)</option>
+                        </select>
+                    </div>
                 </div>
-                <div><label class="text-[10px] font-black text-slate-400">摘要</label><input type="text" id="m-title" placeholder="如: 加油 [1935]" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none"></div>
-                <div><label class="text-[10px] font-black text-slate-400">科目</label><input list="cat-options" id="m-cat" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none"><datalist id="cat-options"><option value="油資"><option value="工資"><option value="材料費"><option value="伙食"><option value="其他"></datalist></div>
-                <div><label class="text-[10px] font-black text-slate-400">金額</label><input type="number" id="m-amount" placeholder="0" class="w-full bg-slate-100 p-4 rounded-2xl font-black text-xl mt-1 outline-none"></div>
-                <button onclick="saveRecord()" class="w-full bg-teal-600 text-white py-5 rounded-[2rem] font-black shadow-xl mt-6 active:scale-95 transition">儲存並同步雲端</button>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400">摘要</label>
+                    <input type="text" id="m-title" placeholder="如: 加油 [1935]" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none border-0">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400">科目</label>
+                    <input list="cat-options" id="m-cat" class="w-full bg-slate-100 p-4 rounded-2xl font-bold mt-1 outline-none border-0">
+                    <datalist id="cat-options">
+                        <option value="油資"><option value="工資"><option value="材料費"><option value="伙食"><option value="其他">
+                    </datalist>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-400">金額</label>
+                    <input type="number" id="m-amount" inputmode="numeric" placeholder="0" class="w-full bg-slate-100 p-4 rounded-2xl font-black text-xl mt-1 outline-none border-0">
+                </div>
+                <button id="save-btn" onclick="saveRecord()" class="w-full bg-teal-600 text-white py-5 rounded-[2rem] font-black shadow-xl mt-6 active:scale-95 transition disabled:bg-slate-400 disabled:scale-100">
+                    儲存並同步雲端
+                </button>
             </div>
         </div>
     </div>
@@ -242,13 +275,21 @@
         function closeModal() { document.getElementById('entry-modal').classList.remove('active'); }
 
         async function saveRecord() {
+            const btn = document.getElementById('save-btn');
             const title = document.getElementById('m-title').value;
             const cat = document.getElementById('m-cat').value;
             const date = document.getElementById('m-date').value;
-            const amount = document.getElementById('m-amount').value;
+            let amount = document.getElementById('m-amount').value;
+
             if(!date || !amount) return alert('日期與金額必填');
             
-            // 增強型自動識別：優先從括號識別，若無則看關鍵字
+            // 防止重複提交
+            btn.disabled = true;
+            btn.innerText = '同步中...';
+
+            // 金額自動修正為正值
+            amount = Math.abs(parseInt(amount));
+
             let finalCat = cat;
             if(!finalCat) {
                 if(title.match(/\[(.*?)\]/)) {
@@ -264,17 +305,20 @@
             
             const { error } = await _sb.from('finance_records').insert([{
                 record_date: date, type: document.getElementById('m-type').value,
-                title: title, category: finalCat, amount: parseInt(amount)
+                title: title, category: finalCat, amount: amount
             }]);
             
             if(!error) { 
                 closeModal(); 
                 document.getElementById('m-title').value = '';
                 document.getElementById('m-amount').value = '';
+                document.getElementById('m-cat').value = '';
                 loadData(); 
             } else {
-                alert('同步失敗，請檢查資料表權限');
+                alert('同步失敗：' + error.message);
             }
+            btn.disabled = false;
+            btn.innerText = '儲存並同步雲端';
         }
 
         function toggleAllCheckboxes(source) {
@@ -308,17 +352,18 @@
             let tInc = 0, tExp = 0, html = '', stats = {};
             filtered.forEach(r => {
                 const isInc = r.type === 'income';
-                isInc ? tInc += r.amount : tExp += r.amount;
-                if(!isInc) stats[r.category] = (stats[r.category] || 0) + r.amount;
+                const amt = r.amount || 0;
+                isInc ? tInc += amt : tExp += amt;
+                if(!isInc) stats[r.category] = (stats[r.category] || 0) + amt;
                 
                 html += `
-                <tr>
+                <tr class="hover:bg-slate-50 transition">
                     <td class="no-print"><input type="checkbox" class="row-check" data-id="${r.id}"></td>
                     <td class="num-font text-slate-400">${r.record_date}</td>
                     <td><span class="text-[9px] font-black px-2 py-0.5 bg-slate-100 rounded text-slate-500 uppercase">${r.category}</span></td>
                     <td class="font-bold text-slate-800">${r.title}</td>
-                    <td class="num-font text-emerald-600 font-bold text-right">${isInc ? r.amount.toLocaleString() : ''}</td>
-                    <td class="num-font text-slate-900 font-bold text-right">${!isInc ? r.amount.toLocaleString() : ''}</td>
+                    <td class="num-font text-emerald-600 font-bold text-right">${isInc ? amt.toLocaleString() : ''}</td>
+                    <td class="num-font text-slate-900 font-bold text-right">${!isInc ? amt.toLocaleString() : ''}</td>
                 </tr>`;
             });
 
@@ -359,10 +404,12 @@
             };
 
             if(myChart) myChart.destroy();
-            myChart = new Chart(document.getElementById('mainChart').getContext('2d'), chartConfig);
+            const mainCtx = document.getElementById('mainChart').getContext('2d');
+            myChart = new Chart(mainCtx, chartConfig);
 
             if(pdfChart) pdfChart.destroy();
-            pdfChart = new Chart(document.getElementById('pdfChart').getContext('2d'), chartConfig);
+            const pdfCtx = document.getElementById('pdfChart').getContext('2d');
+            pdfChart = new Chart(pdfCtx, chartConfig);
 
             let listHtml = '';
             labels.forEach((label, i) => {

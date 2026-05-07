@@ -29,6 +29,10 @@
         .main-container { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
         .content-scroll { padding: 24px; overflow-y: auto; flex-grow: 1; }
         .glass-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        
+        .status-pill { padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: 800; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-done { background: #ccfbf1; color: #0f766e; }
     </style>
 </head>
 <body>
@@ -40,7 +44,7 @@
         <nav class="flex-grow">
             <a href="index.html" class="nav-link"><i class="fas fa-home"></i><span>首頁</span></a>
             <a href="quote.html" class="nav-link"><i class="fas fa-plus"></i><span>新報價</span></a>
-            <a href="quote_query.html" class="nav-link active"><i class="fas fa-history"></i><span>紀錄</span></a>
+            <a href="quote_query.html" class="nav-link active"><i class="fas fa-history"></i><span>報價紀錄</span></a>
         </nav>
     </aside>
 
@@ -57,13 +61,13 @@
 
         <div class="content-scroll">
             <div class="grid grid-cols-2 gap-4 mb-6">
-                <div class="glass-card p-5">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">累計金額</p>
-                    <p id="total_amount" class="text-2xl font-black text-slate-800">NT$ 0</p>
+                <div class="glass-card p-5 border-l-4 border-teal-500">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">總計金額 (1688 專案)</p>
+                    <p id="total_amount" class="text-2xl font-black text-slate-800 tracking-tighter">NT$ 0</p>
                 </div>
-                <div class="glass-card p-5">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">件數統計</p>
-                    <p id="total_count" class="text-2xl font-black text-slate-800">0 件</p>
+                <div class="glass-card p-5 border-l-4 border-slate-800">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">紀錄統計</p>
+                    <p id="total_count" class="text-2xl font-black text-slate-800">0 筆</p>
                 </div>
             </div>
 
@@ -74,29 +78,28 @@
                     <table class="w-full text-left">
                         <thead class="bg-slate-50 border-b">
                             <tr>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400">日期</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400">單號</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400">客戶</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 text-right">總計</th>
-                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 text-center">操作</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">日期</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">單號</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase">案名</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-right">總計</th>
+                                <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase text-center">操作</th>
                             </tr>
                         </thead>
                         <tbody id="quote_list_desktop" class="divide-y text-sm"></tbody>
                     </table>
                 </div>
-                <div id="empty-state" class="hidden py-20 text-center text-slate-300 font-bold">目前無報價紀錄</div>
+                <div id="empty-state" class="hidden py-20 text-center text-slate-300 font-bold italic">目前沒有任何報價紀錄</div>
             </div>
         </div>
     </div>
 
     <script>
-        // 初始化 Supabase
-        const S_URL = 'https://wdpxgichzvfebhlukbrl.supabase.co';
-        const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndkcHhnaWNoenZmZWJobHVrYnJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMjExMzQsImV4cCI6MjA4NDU5NzEzNH0.--85I0A-7WKt0P-ex1Zdnb8UVspuMNshzQtNaLedKq0';
+        // 已經根據您的截圖更新為 1688 專案資訊
+        const S_URL = 'https://nbkjntzlwdhqconhskpv.supabase.co';
+        const S_KEY = 'sb_publishable_1jpNK-6m9XwLpoMnSQe-og_N4sULqYH';
         const _supabase = supabase.createClient(S_URL, S_KEY);
         let allQuotes = [];
 
-        // 定義抓取函式
         async function fetchQuotes() {
             const loader = document.getElementById('loader');
             const icon = document.getElementById('refresh-icon');
@@ -104,9 +107,9 @@
             icon.classList.add('fa-spin');
 
             try {
-                // 指向正確的 quotations 表格
+                // 讀取 projects 表格資料
                 const { data, error } = await _supabase
-                    .from('quotations') 
+                    .from('projects') 
                     .select('*')
                     .order('created_at', { ascending: false });
 
@@ -135,54 +138,63 @@
             empty.classList.add('hidden');
 
             desktop.innerHTML = data.map(q => `
-                <tr class="hover:bg-slate-50 cursor-pointer" onclick="viewDetail('${q.id}')">
-                    <td class="px-6 py-4 text-slate-500">${new Date(q.created_at).toLocaleDateString()}</td>
-                    <td class="px-6 py-4 font-mono text-xs">${q.quote_id || '-'}</td>
-                    <td class="px-6 py-4 font-bold text-slate-800">${q.client || '未填寫'}</td>
-                    <td class="px-6 py-4 text-right font-black text-teal-600">NT$ ${Math.round(q.total || 0).toLocaleString()}</td>
+                <tr class="hover:bg-teal-50/30 cursor-pointer transition" onclick="viewDetail('${q.project_no}')">
+                    <td class="px-6 py-4 text-slate-500 font-medium">${new Date(q.created_at).toLocaleDateString()}</td>
+                    <td class="px-6 py-4 font-mono text-xs font-bold text-slate-400">${q.project_no || '-'}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-bold text-slate-800">${q.name || '未命名案場'}</div>
+                        <span class="status-pill ${q.status === '已簽約' ? 'status-done' : 'status-pending'}">${q.status || '報價中'}</span>
+                    </td>
+                    <td class="px-6 py-4 text-right font-black text-slate-900">NT$ ${Math.round(q.total_amount || 0).toLocaleString()}</td>
                     <td class="px-6 py-4 text-center">
-                        <button onclick="event.stopPropagation(); deleteQuote('${q.id}')" class="text-rose-300 hover:text-rose-500 p-2"><i class="fas fa-trash"></i></button>
+                        <button onclick="event.stopPropagation(); deleteQuote('${q.project_no}')" class="text-slate-300 hover:text-rose-500 transition p-2"><i class="fas fa-trash-alt"></i></button>
                     </td>
                 </tr>
             `).join('');
 
             mobile.innerHTML = data.map(q => `
-                <div class="glass-card p-4" onclick="viewDetail('${q.id}')">
-                    <div class="flex justify-between mb-2"><span class="text-[10px] font-mono text-slate-400">${q.quote_id || '-'}</span><span class="text-[10px] text-slate-400">${new Date(q.created_at).toLocaleDateString()}</span></div>
+                <div class="glass-card p-4 active:scale-95 transition" onclick="viewDetail('${q.project_no}')">
+                    <div class="flex justify-between mb-2 items-center">
+                        <span class="text-[10px] font-mono text-slate-400">${q.project_no || '-'}</span>
+                        <span class="status-pill ${q.status === '已簽約' ? 'status-done' : 'status-pending'}">${q.status || '報價中'}</span>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-1">${q.name || '未命名案場'}</h4>
                     <div class="flex justify-between items-end">
-                        <div><h4 class="font-bold text-slate-800">${q.client || '未填寫'}</h4><p class="text-teal-600 font-black">NT$ ${Math.round(q.total || 0).toLocaleString()}</p></div>
-                        <button onclick="event.stopPropagation(); deleteQuote('${q.id}')" class="w-8 h-8 bg-rose-50 text-rose-400 rounded-lg flex items-center justify-center"><i class="fas fa-trash text-xs"></i></button>
+                        <p class="text-teal-600 font-black text-lg">NT$ ${Math.round(q.total_amount || 0).toLocaleString()}</p>
+                        <div class="flex gap-2 text-[10px] text-slate-400">
+                            <span>${new Date(q.created_at).toLocaleDateString()}</span>
+                            <button onclick="event.stopPropagation(); deleteQuote('${q.project_no}')" class="text-rose-300 ml-2"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
         function updateStats(data) {
-            const total = data.reduce((sum, q) => sum + (Number(q.total) || 0), 0);
+            const total = data.reduce((sum, q) => sum + (Number(q.total_amount) || 0), 0);
             document.getElementById('total_amount').innerText = `NT$ ${Math.round(total).toLocaleString()}`;
-            document.getElementById('total_count').innerText = `${data.length} 件`;
+            document.getElementById('total_count').innerText = `${data.length} 筆`;
         }
 
-        function viewDetail(id) {
-            localStorage.setItem('edit_quote_id', id);
+        function viewDetail(projectNo) {
+            localStorage.setItem('edit_project_no', projectNo);
             location.href = 'quote.html';
         }
 
-        async function deleteQuote(id) {
-            if (!confirm('確認刪除此筆報價？')) return;
-            const { error } = await _supabase.from('quotations').delete().eq('id', id);
-            if (error) alert('刪除失敗'); else fetchQuotes();
+        async function deleteQuote(projectNo) {
+            if (!confirm(`確認要刪除案場 [${projectNo}] 嗎？`)) return;
+            const { error } = await _supabase.from('projects').delete().eq('project_no', projectNo);
+            if (error) alert('刪除失敗：' + error.message); else fetchQuotes();
         }
 
-        // 頁面加載完成後執行
         document.addEventListener('DOMContentLoaded', () => {
             fetchQuotes();
             document.getElementById('refreshBtn').onclick = fetchQuotes;
             document.getElementById('searchInput').oninput = (e) => {
                 const term = e.target.value.toLowerCase();
                 const filtered = allQuotes.filter(q => 
-                    (q.client && q.client.toLowerCase().includes(term)) || 
-                    (q.quote_id && q.quote_id.toLowerCase().includes(term))
+                    (q.name && q.name.toLowerCase().includes(term)) || 
+                    (q.project_no && q.project_no.toLowerCase().includes(term))
                 );
                 renderList(filtered);
             };
